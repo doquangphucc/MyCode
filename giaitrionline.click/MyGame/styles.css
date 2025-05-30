@@ -143,13 +143,24 @@ h2 {
 /* Styles for the container of main menu action buttons */
 .main-menu-actions {
     display: flex;
-    justify-content: center; /* Center the buttons within this container */
-    align-items: center; /* Align items vertically if they have different heights */
-    gap: 20px; /* Space between the buttons */
+    justify-content: center; /* This will center the start button */
+    align-items: center; /* Align items vertically */
     width: 100%; /* Ensure the container can center its content properly */
+    position: relative; /* Added for absolute positioning of the leaderboard button */
+    /* gap: 20px; */ /* Removed gap as leaderboard button is now absolutely positioned */
     /* The margin-top on individual buttons will still apply from the shared rule,
        and main-menu's justify-content: space-around will space this group. */
 }
+
+/* Positioning for the leaderboard button */
+#leaderboard-button {
+    position: absolute;
+    right: 0; /* Position it to the far right of .main-menu-actions */
+    top: 50%; /* Vertically center it */
+    transform: translateY(-50%); /* Adjust for exact vertical centering */
+    /* .menu-button class handles other styling like margin-top, padding, etc. */
+}
+
 
 /* Countdown Screen */
 #countdown-screen {
@@ -277,12 +288,22 @@ h2 {
     width: 100%;
     height: 100%;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    /* Ensure the wrapper is centered on the screen */
+    justify-content: center; /* Centers .leaderboard-content-wrapper vertically */
+    align-items: center;     /* Centers .leaderboard-content-wrapper horizontally */
     background-color: rgba(0, 0, 0, 0.9); /* Darker background for focus */
     z-index: 30; /* Ensure it's on top */
     padding: 20px;
+}
+
+/* Wrapper for the leaderboard content to allow shifting */
+.leaderboard-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center h2, ol, button within this wrapper */
+    text-align: center;  /* Ensure text elements like h2 are centered if not block */
+    transform: translateX(30px); /* Shift the content block 30px to the right */
+                                 /* Adjust this value as needed for "1 chút" */
 }
 
 #leaderboard-screen h2 {
