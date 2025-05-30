@@ -28,7 +28,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="menu-section">
                 <h2>Chọn Rồng</h2>
                 <div class="selection-container" id="dragon-selection">
@@ -46,8 +46,12 @@
                     </div>
                 </div>
             </div>
-            
-            <button id="start-button">Bắt Đầu</button>
+
+            <div class="main-menu-actions">
+                <button id="start-button">Bắt Đầu</button>
+                <!-- ADDED LEADERBOARD BUTTON -->
+                <button id="leaderboard-button" class="menu-button">Bảng Xếp Hạng</button>
+            </div>
         </div>
 
         <!-- Countdown Screen -->
@@ -60,7 +64,7 @@
             <div id="score-display">Điểm: <span id="score">0</span></div>
             <div id="game-area">
                 <div id="player"></div>
-                <div id="dragon" style="display: none;"></div> <!-- ADDED DRAGON ELEMENT -->
+                <div id="dragon" style="display: none;"></div>
             </div>
         </div>
 
@@ -69,7 +73,14 @@
             <h2>Game Over</h2>
             <p>Điểm số: <span id="final-score">0</span></p>
             <button id="restart-button">Chơi Lại</button>
-            <button id="back-to-menu-button">Quay Lại Menu</button> <!-- ADDED BACK TO MENU BUTTON -->
+            <button id="back-to-menu-button">Quay Lại Menu</button>
+        </div>
+
+        <!-- ADDED LEADERBOARD SCREEN -->
+        <div id="leaderboard-screen" class="hidden">
+            <h2>Bảng Xếp Hạng</h2>
+            <ol id="high-scores-list"></ol>
+            <button id="back-from-leaderboard-button" class="menu-button">Quay Lại Menu</button>
         </div>
     </div>
 

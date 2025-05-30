@@ -101,7 +101,7 @@ h2 {
     box-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
 }
 
-#start-button, #restart-button {
+#start-button, #restart-button, .menu-button /* ADDED .menu-button for common styling */ {
     background-color: #ffcc00;
     color: #000;
     border: none;
@@ -112,9 +112,10 @@ h2 {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+    margin-top: 10px; /* Added margin for spacing between menu buttons */
 }
 
-#start-button:hover, #restart-button:hover {
+#start-button:hover, #restart-button:hover, .menu-button:hover /* ADDED .menu-button for common styling */ {
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
 }
@@ -139,6 +140,16 @@ h2 {
     background-color: #5a6268;
 }
 
+/* Styles for the container of main menu action buttons */
+.main-menu-actions {
+    display: flex;
+    justify-content: center; /* Center the buttons within this container */
+    align-items: center; /* Align items vertically if they have different heights */
+    gap: 20px; /* Space between the buttons */
+    width: 100%; /* Ensure the container can center its content properly */
+    /* The margin-top on individual buttons will still apply from the shared rule,
+       and main-menu's justify-content: space-around will space this group. */
+}
 
 /* Countdown Screen */
 #countdown-screen {
@@ -228,7 +239,7 @@ h2 {
     position: absolute;
     width: 50px; /* gameState.enemyWidth */
     height: 50px; /* gameState.enemyHeight */
-    background-image: url('images/enemy-sprite.png'); 
+    background-image: url('images/enemy-sprite.png');
     border-radius: 5px;
     background-size: contain;
     background-repeat: no-repeat;
@@ -255,8 +266,62 @@ h2 {
 #game-over-screen h2 {
     font-size: 3rem;
     margin-bottom: 20px;
-    
+
 }
+
+/* ADDED LEADERBOARD SCREEN STYLES */
+#leaderboard-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.9); /* Darker background for focus */
+    z-index: 30; /* Ensure it's on top */
+    padding: 20px;
+}
+
+#leaderboard-screen h2 {
+    font-size: 2.5rem;
+    margin-bottom: 25px;
+    color: #ffcc00;
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+}
+
+#high-scores-list {
+    list-style-type: decimal; /* Numbered list */
+    padding-left: 40px; /* Indent list items */
+    font-size: 1.2rem;
+    color: #fff;
+    width: 80%;
+    max-width: 400px;
+    margin-bottom: 30px;
+}
+
+#high-scores-list li {
+    margin-bottom: 10px;
+    padding: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#high-scores-list li:last-child {
+    border-bottom: none;
+}
+
+#back-from-leaderboard-button { /* Style for the back button on leaderboard */
+    background-color: #6c757d;
+    color: #fff;
+}
+
+#back-from-leaderboard-button:hover {
+    background-color: #5a6268;
+}
+
+
 /* Utility class to hide elements */
 .hidden {
     display: none !important; /* Using !important to ensure it overrides other display properties */
