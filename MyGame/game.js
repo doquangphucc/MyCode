@@ -461,5 +461,4 @@ function gameLoop(currentTime) {
         requestAnimationFrame(gameLoop);
     }
 }
-
 init();
