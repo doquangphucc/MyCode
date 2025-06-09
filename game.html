@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Game - Kéo Búa Bao</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 20px; background-color: #f0f0f0; }
+        .game-container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 600px; }
+        .player-info { display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 1.2em; }
+        .player-area { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 40%; }
+        .player-area .choice-display { font-size: 3em; margin-top: 10px; height: 60px; }
+        .vs { font-size: 2em; font-weight: bold; align-self: center; }
+        #countdownArea { font-size: 2.5em; font-weight: bold; color: #d9534f; margin: 20px 0; height: 40px; }
+        #messageArea { font-size: 1.2em; color: #337ab7; margin: 15px 0; min-height: 30px; }
+        .choices button {
+            font-size: 1.5em; padding: 15px 20px; margin: 0 10px; cursor: pointer;
+            border: 2px solid transparent; border-radius: 8px; transition: all 0.2s;
+        }
+        .choices button:hover { border-color: #5cb85c; }
+        .choices button:disabled { cursor: not-allowed; opacity: 0.7; }
+        #rock { background-color: #f0ad4e; color: white; } /* Búa */
+        #paper { background-color: #5bc0de; color: white; } /* Bao */
+        #scissors { background-color: #5cb85c; color: white; } /* Kéo */
+        #resultArea { font-size: 1.8em; font-weight: bold; margin-top: 20px; min-height: 40px; }
+        #leaveRoomBtn {
+            margin-top: 30px; padding: 10px 20px; font-size: 1em;
+            background-color: #d9534f; color: white; border: none; border-radius: 5px; cursor: pointer;
+        }
+        #leaveRoomBtn:hover { background-color: #c9302c; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Trận Đấu Kéo Búa Bao</h1>
+
+        <div class="player-info">
+            <div class="player-area" id="player1Area">
+                <h3 id="player1Name">Người chơi 1</h3>
+                <div class="choice-display" id="player1ChoiceDisplay">?</div>
+            </div>
+            <div class="vs">VS</div>
+            <div class="player-area" id="player2Area">
+                <h3 id="player2Name">Người chơi 2</h3>
+                <div class="choice-display" id="player2ChoiceDisplay">?</div>
+            </div>
+        </div>
+
+        <div id="countdownArea">Chờ người chơi...</div>
+        <div id="messageArea"></div>
+
+        <div class="choices" id="choicesArea" style="display: none;">
+            <button id="rock" data-choice="rock">Búa ✊</button>
+            <button id="paper" data-choice="paper">Bao 🖐️</button>
+            <button id="scissors" data-choice="scissors">Kéo ✌️</button>
+        </div>
+
+        <div id="resultArea"></div>
+
+        <button id="leaveRoomBtn">Rời phòng</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

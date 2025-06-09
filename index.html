@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sảnh Chờ - Kéo Búa Bao</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        #roomsList {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            min-height: 100px;
+            background-color: #fff;
+        }
+        .room-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .room-item:last-child {
+            border-bottom: none;
+        }
+        .room-name {
+            font-weight: bold;
+        }
+        .room-players {
+            font-style: italic;
+            color: #555;
+            margin-left: 15px;
+            margin-right: 15px;
+        }
+        .room-item button {
+            padding: 5px 10px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .room-item button:hover {
+            background-color: #4cae4c;
+        }
+        .room-red button { /* Nút vào phòng sẽ không hiển thị cho phòng đỏ, nhưng để đây nếu có logic khác */
+            /* background-color: #d9534f; */
+        }
+        .room-green {
+            border-left: 5px solid green;
+        }
+        .room-red {
+            border-left: 5px solid red;
+            color: #a94442;
+        }
+         .room-blue { /* Phòng trống hoàn toàn */
+            border-left: 5px solid cornflowerblue;
+        }
+        #createRoomBtn {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #createRoomBtn:hover {
+            background-color: #0056b3;
+        }
+        #userInfo {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chào mừng bạn đến với Game Kéo Búa Bao!</h1>
+        <div id="userInfo">
+            Xin chào, <span id="lobbyUsername">Người chơi</span>!
+            <button id="logoutBtn" style="float: right;">Đăng xuất</button>
+        </div>
+
+        <h2>Danh sách phòng chơi</h2>
+        <div id="roomsList">
+            <p>Đang tải danh sách phòng...</p>
+        </div>
+
+        <button id="createRoomBtn">Tạo phòng mới</button>
+    </div>
+
+    <script>
+        // Lấy username từ localStorage để hiển thị
+        const storedUsername = localStorage.getItem('username');
+        if (storedUsername) {
+            document.getElementById('lobbyUsername').textContent = storedUsername;
+        }
+        const currentUserId = localStorage.getItem('userId'); // Cần cho lobby.js
+
+        // Xử lý đăng xuất
+        const logoutBtn = document.getElementById('logoutBtn');
+        if(logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('userId');
+                localStorage.removeItem('username');
+                // localStorage.removeItem('token'); // Nếu bạn dùng token
+                alert('Bạn đã đăng xuất.');
+                window.location.href = 'login.html'; // Hoặc trang đăng nhập của bạn
+            });
+        }
+    </script>
+    <script src="lobby.js"></script>
+</body>
+</html>
