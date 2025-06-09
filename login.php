@@ -1,13 +1,15 @@
 <?php
-require_once 'db_connect.php'; // Điều chỉnh đường dẫn nếu cần
+// Bắt đầu session ở đầu mỗi file cần xác thực
+session_start();
+
+require_once 'db_connect.php';
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: *'); // Cần cấu hình chính xác cho production
 header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With');
-
-// Bắt đầu session nếu bạn muốn sử dụng session PHP (tùy chọn, JWT phổ biến hơn cho API)
-// session_start();
+header('Access-Control-Allow-Headers: Content-Type');
+// Cho phép trình duyệt gửi cookie (chứa session ID)
+header('Access-Control-Allow-Credentials: true');
 
 $response = ['status' => 'error', 'message' => 'Yêu cầu không hợp lệ.'];
 
@@ -27,26 +29,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && password_verify($password, $user['PasswordHash'])) {
-                // Đăng nhập thành công
-                // Ở đây bạn có thể tạo JWT token hoặc thiết lập session
-                // Ví dụ đơn giản:
+                // Đăng nhập thành công, lưu thông tin vào session
+                $_SESSION['user_id'] = $user['Id'];
+                $_SESSION['username'] = $user['Username'];
+
                 $response['status'] = 'success';
                 $response['message'] = 'Đăng nhập thành công.';
                 $response['user'] = [
                     'id' => $user['Id'],
                     'username' => $user['Username']
-                    // Không bao giờ trả về PasswordHash
                 ];
-                // Nếu dùng JWT, bạn sẽ tạo token ở đây và gửi về
-                // $response['token'] = generate_jwt_token($user['Id']);
                 http_response_code(200);
             } else {
                 $response['message'] = 'Tên đăng nhập hoặc mật khẩu không đúng.';
                 http_response_code(401); // Unauthorized
             }
         } catch (PDOException $e) {
-            // Log lỗi $e->getMessage()
-            $response['message'] = 'Đã xảy ra lỗi phía máy chủ khi đăng nhập.';
+            $response['message'] = 'Lỗi server khi đăng nhập.';
             http_response_code(500);
         }
     } else {

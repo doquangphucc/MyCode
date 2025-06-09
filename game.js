@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
     const countdownArea = document.getElementById('countdownArea');
     const messageArea = document.getElementById('messageArea');
     const choicesArea = document.getElementById('choicesArea');
@@ -8,24 +9,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const player1ChoiceDisplay = document.getElementById('player1ChoiceDisplay');
     const player2NameDisplay = document.getElementById('player2Name');
     const player2ChoiceDisplay = document.getElementById('player2ChoiceDisplay');
-
     const choiceButtons = {
         rock: document.getElementById('rock'),
         paper: document.getElementById('paper'),
         scissors: document.getElementById('scissors')
     };
 
+    // Game state
     let socket;
     let roomId;
-    let currentUserId; // Sẽ lấy từ localStorage
-    let myPlayerNumber; // 1 hoặc 2
+    let currentUserId;
+    let username;
+    let myPlayerNumber;
+    let choiceTimer;
+    let playerMadeChoiceThisRound = false;
 
+    // --- INITIALIZATION ---
     function initGame() {
         currentUserId = localStorage.getItem('userId');
-        const username = localStorage.getItem('username');
+        username = localStorage.getItem('username');
         if (!currentUserId) {
             alert("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.");
-            window.location.href = 'login.html'; // Hoặc trang sảnh
+            window.location.href = 'login.html';
             return;
         }
 
@@ -33,13 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
         roomId = params.get('roomId');
         if (!roomId) {
             alert("Không tìm thấy ID phòng. Quay lại sảnh.");
-            window.location.href = 'lobby.html';
+            window.location.href = 'index.html';
             return;
         }
 
-        // Thay 'ws://localhost:8080' bằng URL WebSocket server của bạn
-        // Ví dụ: nếu bạn dùng Ratchet, nó thường chạy trên một port khác.
-        socket = new WebSocket('ws://localhost:8080'); // ĐỊA CHỈ WEBSOCKET SERVER
+        connectWebSocket();
+    }
+
+    // --- WEBSOCKET CONNECTION ---
+    function connectWebSocket() {
+        // Thay 'ws://localhost:8080' bằng địa chỉ IP của máy chủ nếu cần
+        socket = new WebSocket('ws://localhost:8080');
 
         socket.onopen = () => {
             console.log('WebSocket Connected');
@@ -56,72 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log('Message from server:', data);
-
-            switch (data.type) {
-                case 'room_full':
-                    alert('Phòng đã đầy hoặc có lỗi xảy ra. Quay lại sảnh.');
-                    window.location.href = 'lobby.html';
-                    break;
-                case 'game_info': // Server gửi thông tin ban đầu về phòng và người chơi
-                    myPlayerNumber = data.yourPlayerNumber;
-                    player1NameDisplay.textContent = data.player1.username || 'Người chơi 1';
-                    if (data.player2) {
-                        player2NameDisplay.textContent = data.player2.username || 'Người chơi 2';
-                    } else {
-                        player2NameDisplay.textContent = 'Đang chờ...';
-                    }
-                    if (data.player1 && data.player2) {
-                        countdownArea.textContent = "Chuẩn bị bắt đầu!";
-                    } else {
-                        countdownArea.textContent = "Đang chờ người chơi thứ 2...";
-                    }
-                    break;
-                case 'player_joined':
-                    if (data.playerNumber === 1) {
-                        player1NameDisplay.textContent = data.username;
-                    } else if (data.playerNumber === 2) {
-                        player2NameDisplay.textContent = data.username;
-                    }
-                    countdownArea.textContent = "Chuẩn bị bắt đầu!";
-                    break;
-                case 'countdown':
-                    countdownArea.textContent = data.value;
-                    if (data.value === "Bắt đầu!") {
-                        messageArea.textContent = 'Hãy chọn trong 5 giây!';
-                        showChoices();
-                        startChoiceTimer(5); // Bắt đầu đếm ngược 5s để chọn
-                    }
-                    break;
-                case 'game_result':
-                    hideChoices();
-                    displayChoices(data.choices);
-                    displayResult(data.winner, data.choices);
-                    messageArea.textContent = 'Ván đấu kết thúc. Bạn sẽ được đưa về sảnh sau giây lát.';
-                    setTimeout(() => {
-                        // Tự động rời phòng sau khi xem kết quả
-                        // Hoặc server có thể tự động kick
-                        window.location.href = 'lobby.html';
-                    }, 5000); // 5 giây
-                    break;
-                case 'opponent_choice_made': // Thông báo đối thủ đã chọn (không tiết lộ lựa chọn)
-                    if (myPlayerNumber === 1 && data.playerNumber === 2 || myPlayerNumber === 2 && data.playerNumber === 1) {
-                         messageArea.textContent = 'Đối thủ đã chọn. Chờ bạn...';
-                    }
-                    break;
-                case 'opponent_left':
-                    alert('Đối thủ đã rời phòng. Trận đấu kết thúc.');
-                    window.location.href = 'lobby.html';
-                    break;
-                case 'error':
-                    alert(`Lỗi từ server: ${data.message}`);
-                    break;
-            }
+            handleServerMessage(data);
         };
 
         socket.onclose = () => {
             console.log('WebSocket Disconnected');
-            messageArea.textContent = 'Mất kết nối tới server. Vui lòng thử lại.';
-            // Có thể thử kết nối lại hoặc điều hướng người dùng
+            messageArea.textContent = 'Mất kết nối tới server. Vui lòng tải lại trang hoặc quay về sảnh.';
         };
 
         socket.onerror = (error) => {
@@ -130,14 +79,72 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    function showChoices() {
+    // --- MESSAGE HANDLING ---
+    function handleServerMessage(data) {
+        switch (data.type) {
+            case 'room_full':
+                alert('Phòng đã đầy hoặc có lỗi xảy ra. Quay lại sảnh.');
+                window.location.href = 'index.html';
+                break;
+            case 'game_info':
+                updatePlayerInfo(data.players);
+                myPlayerNumber = data.yourPlayerNumber;
+                if(data.players.length < 2) {
+                    countdownArea.textContent = "Đang chờ người chơi thứ 2...";
+                }
+                break;
+            case 'player_joined':
+                updatePlayerInfo(data.players);
+                 countdownArea.textContent = "Chuẩn bị bắt đầu!";
+                break;
+            case 'countdown':
+                countdownArea.textContent = data.value;
+                if (data.value === "Bắt đầu!") {
+                    messageArea.textContent = 'Hãy chọn trong 5 giây!';
+                    resetForNewRound();
+                    startChoiceTimer(5);
+                }
+                break;
+            case 'game_result':
+                hideChoices();
+                displayChoices(data.choices);
+                displayResult(data.winnerId);
+                messageArea.textContent = 'Ván đấu kết thúc. Sẽ quay về sảnh sau 5 giây.';
+                setTimeout(() => window.location.href = 'index.html', 5000);
+                break;
+            case 'opponent_choice_made':
+                if (messageArea.textContent.includes('Hãy chọn')) {
+                    messageArea.textContent = 'Đối thủ đã chọn. Chờ bạn...';
+                }
+                break;
+            case 'opponent_left':
+                alert('Đối thủ đã rời phòng. Trận đấu kết thúc.');
+                window.location.href = 'index.html';
+                break;
+            case 'error':
+                alert(`Lỗi từ server: ${data.message}`);
+                break;
+        }
+    }
+    
+    function updatePlayerInfo(players){
+        const player1 = players.find(p => p.playerNumber === 1);
+        const player2 = players.find(p => p.playerNumber === 2);
+        
+        player1NameDisplay.textContent = player1 ? player1.username : 'Người chơi 1';
+        player2NameDisplay.textContent = player2 ? player2.username : 'Đang chờ...';
+    }
+
+    // --- UI & GAME FLOW ---
+    function resetForNewRound() {
         choicesArea.style.display = 'block';
         Object.values(choiceButtons).forEach(btn => btn.disabled = false);
         player1ChoiceDisplay.textContent = '?';
         player2ChoiceDisplay.textContent = '?';
         resultArea.textContent = '';
+        playerMadeChoiceThisRound = false;
     }
-
+    
     function hideChoices() {
         choicesArea.style.display = 'none';
     }
@@ -146,11 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.values(choiceButtons).forEach(btn => btn.disabled = true);
     }
 
-    let choiceTimer;
     function startChoiceTimer(seconds) {
         let timeLeft = seconds;
         messageArea.textContent = `Chọn trong: ${timeLeft}s`;
-        clearInterval(choiceTimer); // Xóa interval cũ nếu có
+        clearInterval(choiceTimer);
         choiceTimer = setInterval(() => {
             timeLeft--;
             if (timeLeft >= 0) {
@@ -158,78 +164,59 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (timeLeft < 0) {
                 clearInterval(choiceTimer);
-                messageArea.textContent = 'Hết giờ chọn!';
-                disableChoiceButtons();
-                // Gửi lựa chọn mặc định hoặc không chọn lên server nếu người chơi chưa chọn
-                // Server sẽ xử lý việc này
                 if (!playerMadeChoiceThisRound) {
-                     socket.send(JSON.stringify({ type: 'player_choice', choice: null, roomId: roomId, userId: currentUserId }));
+                    messageArea.textContent = 'Hết giờ chọn!';
+                    disableChoiceButtons();
+                    socket.send(JSON.stringify({ type: 'player_choice', choice: null, roomId: roomId, userId: currentUserId }));
                 }
             }
         }, 1000);
     }
-    let playerMadeChoiceThisRound = false;
 
     Object.values(choiceButtons).forEach(button => {
         button.addEventListener('click', () => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
+            if (socket && socket.readyState === WebSocket.OPEN && !playerMadeChoiceThisRound) {
                 const choice = button.dataset.choice;
                 socket.send(JSON.stringify({ type: 'player_choice', choice: choice, roomId: roomId, userId: currentUserId }));
                 messageArea.textContent = `Bạn đã chọn ${translateChoice(choice)}. Chờ đối thủ...`;
                 disableChoiceButtons();
-                clearInterval(choiceTimer); // Dừng timer khi đã chọn
+                clearInterval(choiceTimer);
                 playerMadeChoiceThisRound = true;
             }
         });
     });
 
-    function displayChoices(choices) { // choices = { player1: 'rock', player2: 'paper' }
+    function displayChoices(choices) {
         if (choices) {
             player1ChoiceDisplay.textContent = translateChoice(choices.player1) || '?';
             player2ChoiceDisplay.textContent = translateChoice(choices.player2) || '?';
         }
     }
 
-    function displayResult(winnerData, choices) { // winnerData = { winnerId: 'userId', text: 'Bạn thắng!' } hoặc null nếu hòa
-        if (winnerData) {
-            if (winnerData.winnerId === currentUserId) {
-                resultArea.textContent = `🎉 BẠN THẮNG! 🎉`;
-                resultArea.style.color = 'green';
-            } else if (winnerData.winnerId === 'draw') {
-                resultArea.textContent = `🤝 HÒA! 🤝`;
-                resultArea.style.color = 'blue';
-            } else {
-                resultArea.textContent = `😭 BẠN THUA! 😭`;
-                resultArea.style.color = 'red';
-            }
-        } else { // Trường hợp không có winnerData rõ ràng, có thể là hòa hoặc lỗi
-             if (choices && choices.player1 && choices.player2 && choices.player1 === choices.player2) {
-                resultArea.textContent = `🤝 HÒA! 🤝`;
-                resultArea.style.color = 'blue';
-            } else {
-                resultArea.textContent = "Chờ kết quả...";
-                resultArea.style.color = 'black';
-            }
+    function displayResult(winnerId) {
+        if (winnerId === 'draw') {
+            resultArea.textContent = `🤝 HÒA! 🤝`;
+            resultArea.style.color = 'blue';
+        } else if (winnerId === currentUserId) {
+            resultArea.textContent = `🎉 BẠN THẮNG! 🎉`;
+            resultArea.style.color = 'green';
+        } else {
+            resultArea.textContent = `😭 BẠN THUA! 😭`;
+            resultArea.style.color = 'red';
         }
     }
 
-
     function translateChoice(choice) {
-        switch (choice) {
-            case 'rock': return '✊ Búa';
-            case 'paper': return '🖐️ Bao';
-            case 'scissors': return '✌️ Kéo';
-            default: return choice; // Hoặc '?' nếu không xác định
-        }
+        const choiceMap = { 'rock': '✊ Búa', 'paper': '🖐️ Bao', 'scissors': '✌️ Kéo' };
+        return choiceMap[choice] || choice;
     }
 
     leaveRoomBtn.addEventListener('click', () => {
         if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: 'leave_game', roomId: roomId, userId: currentUserId }));
+            socket.close();
         }
-        window.location.href = 'index.html'; // Điều hướng ngay cả khi socket không mở
+        window.location.href = 'index.html';
     });
 
-    // Khởi tạo game khi trang được tải
     initGame();
 });

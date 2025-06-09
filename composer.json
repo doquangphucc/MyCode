@@ -1,0 +1,13 @@
+{
+    "name": "your-name/keo-bua-bao-game",
+    "description": "A real-time Rock-Paper-Scissors game server.",
+    "type": "project",
+    "require": {
+        "cboden/ratchet": "^0.4.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "MyApp\\": "src"
+        }
+    }
+}

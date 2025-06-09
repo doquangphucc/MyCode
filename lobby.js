@@ -1,18 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Giả sử sau khi đăng nhập, bạn lưu userId vào localStorage
-    // Trong ứng dụng thực tế, bạn sẽ dùng token và xác thực phía server
+    // Lấy thông tin người dùng từ localStorage sau khi đăng nhập
     const currentUserId = localStorage.getItem('userId');
     const username = localStorage.getItem('username');
+    const API_BASE_URL = 'api'; 
 
+    // Kiểm tra nếu người dùng chưa đăng nhập, chuyển hướng về trang login
     if (!currentUserId) {
-        // Chuyển hướng về trang đăng nhập nếu chưa có userId
-        // window.location.href = 'login.html';
-        console.log("Người dùng chưa đăng nhập. Vui lòng đăng nhập để vào sảnh.");
-        document.body.innerHTML = "<p>Vui lòng <a href='login.html'>đăng nhập</a> để vào sảnh.</p>";
+        window.location.href = 'login.html';
         return;
     }
+    
+    // Hiển thị thông tin người dùng
+    document.getElementById('lobbyUsername').textContent = username;
 
-    const API_BASE_URL = 'api'; // Hoặc URL đầy đủ nếu khác domain
     const roomsListDiv = document.getElementById('roomsList');
     const createRoomBtn = document.getElementById('createRoomBtn');
 
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rooms.forEach(room => {
             const roomElement = document.createElement('div');
             roomElement.classList.add('room-item');
-            roomElement.classList.add(`room-${room.StatusColor}`); // 'room-green', 'room-red'
+            roomElement.classList.add(`room-${room.StatusColor}`);
 
             let playersInfo = "Trống";
             if (room.PlayerCount === 1) playersInfo = `${room.Player1Username || 'Người chơi 1'}`;
@@ -54,12 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="room-players">${playersInfo}</span>
             `;
 
-            if (room.PlayerCount < 2) {
+            // Cho phép vào phòng nếu phòng chưa đầy và người chơi không phải là người đã ở trong phòng
+            if (room.PlayerCount < 2 && room.Player1ID != currentUserId) {
                 const joinBtn = document.createElement('button');
                 joinBtn.textContent = 'Vào phòng';
                 joinBtn.onclick = () => joinRoom(room.RoomID);
                 roomElement.appendChild(joinBtn);
-            } else {
+            } else if (room.PlayerCount >= 2) {
                  const fullText = document.createElement('span');
                  fullText.textContent = " (Đầy)";
                  fullText.style.color = "grey";
@@ -71,20 +72,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function createRoom() {
         const roomName = prompt("Nhập tên phòng (để trống sẽ tự tạo):", `Phòng của ${username || 'người chơi'}`);
-        // Nếu người dùng hủy prompt, roomName sẽ là null
-        // if (roomName === null) return; // Không làm gì nếu hủy
+        if (roomName === null) return;
 
         try {
+            // Server sẽ tự lấy userId từ session, không cần gửi trong body nữa
             const response = await fetch(`${API_BASE_URL}/create_room.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: currentUserId, roomName: roomName })
+                body: JSON.stringify({ roomName: roomName })
             });
             const data = await response.json();
             if (data.status === 'success') {
                 alert(`Phòng "${data.roomName}" đã được tạo!`);
-                fetchRooms(); // Tải lại danh sách phòng
-                // Tự động vào phòng vừa tạo: joinRoom(data.roomId);
+                // Tự động vào phòng vừa tạo
+                joinRoom(data.roomId);
             } else {
                 alert(`Lỗi tạo phòng: ${data.message}`);
             }
@@ -96,26 +97,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function joinRoom(roomId) {
         try {
+             // Server sẽ tự lấy userId từ session
             const response = await fetch(`${API_BASE_URL}/join_room.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: currentUserId, roomId: roomId })
+                body: JSON.stringify({ roomId: roomId })
             });
             const data = await response.json();
-            alert(data.message); // Thông báo kết quả
             if (data.status === 'success' || data.status === 'info') {
-                // Chuyển hướng tới trang game với roomId
-                // window.location.href = `game.html?roomId=${roomId}`;
-                console.log(`Đã vào phòng ${roomId}. Chuyển tới màn hình game...`);
+                // *** ĐÃ SỬA: Chuyển hướng tới trang game với roomId ***
+                window.location.href = `game.html?roomId=${roomId}`;
+            } else {
+                alert(data.message); // Thông báo lỗi
+                fetchRooms(); // Tải lại danh sách phòng
             }
-            fetchRooms(); // Tải lại danh sách phòng
         } catch (error) {
             console.error('Lỗi joinRoom:', error);
             alert('Không thể kết nối tới máy chủ để vào phòng.');
         }
     }
+    
+    // Nút đăng xuất
+    const logoutBtn = document.getElementById('logoutBtn');
+    if(logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            await fetch(`${API_BASE_URL}/logout.php`);
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            alert('Bạn đã đăng xuất.');
+            window.location.href = 'login.html';
+        });
+    }
 
     if (createRoomBtn) createRoomBtn.addEventListener('click', createRoom);
-    fetchRooms(); // Tải danh sách phòng khi vào sảnh
-    setInterval(fetchRooms, 15000); // Tự động cập nhật danh sách phòng mỗi 15 giây
+    fetchRooms();
+    setInterval(fetchRooms, 15000);
 });
