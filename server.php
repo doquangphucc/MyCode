@@ -1,8 +1,10 @@
 <?php
-// File: bin/server.php
-// Đây là file để khởi chạy server từ dòng lệnh: php bin/server.php
+// File: server.php
+// Đặt file này ở thư mục gốc của dự án
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+// *** THAY ĐỔI ĐƯỜNG DẪN ***
+// require_once __DIR__ để trỏ đến thư mục hiện tại
+require_once __DIR__ . '/vendor/autoload.php';
 
 use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
@@ -13,7 +15,7 @@ use MyApp\GameServer;
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 // Khởi tạo server
-$port = 8080;
+$port = 8090;
 $server = IoServer::factory(
     new HttpServer(
         new WsServer(

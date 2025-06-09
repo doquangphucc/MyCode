@@ -47,8 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- WEBSOCKET CONNECTION ---
     function connectWebSocket() {
-        // Thay 'ws://localhost:8080' bằng địa chỉ IP của máy chủ nếu cần
-        socket = new WebSocket('ws://localhost:8080');
+        // *** THAY ĐỔI QUAN TRỌNG Ở ĐÂY ***
+        // Sử dụng wss:// vì website của bạn có SSL (https)
+        // Đường dẫn /ws/ sẽ được cấu hình trong Nginx ở bước tiếp theo
+        const socketUrl = 'wss://giaitrionline.click:8443/ws/';
+        socket = new WebSocket(socketUrl);
 
         socket.onopen = () => {
             console.log('WebSocket Connected');

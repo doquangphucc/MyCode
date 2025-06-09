@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE_URL = 'api'; // Thư mục chứa các file PHP API
+    // Không cần API_BASE_URL nữa, vì các file đều nằm chung thư mục
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const errorMessageDiv = document.getElementById('errorMessage');
@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = loginForm.password.value;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/login.php`, {
+                // Gọi trực tiếp đến file login.php
+                const response = await fetch(`login.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -27,10 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok && data.status === 'success') {
-                    // Lưu thông tin người dùng vào localStorage
                     localStorage.setItem('userId', data.user.id);
                     localStorage.setItem('username', data.user.username);
-                    // Chuyển hướng đến sảnh chờ
                     window.location.href = 'index.html';
                 } else {
                     showError(data.message || 'Đã xảy ra lỗi. Vui lòng thử lại.');
@@ -55,7 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/register.php`, {
+                // Gọi trực tiếp đến file register.php
+                const response = await fetch(`register.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -65,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.ok && data.status === 'success') {
                     alert('Đăng ký thành công! Vui lòng đăng nhập.');
-                    // Chuyển hướng đến trang đăng nhập
                     window.location.href = 'login.html';
                 } else {
                     showError(data.message || 'Đã xảy ra lỗi. Vui lòng thử lại.');
